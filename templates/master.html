@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Кабинет мастера{% endblock %}
+{% block body %}
+
+<div class="master-header">
+  <h1>Кабинет мастера 💅</h1>
+  <div style="display:flex; gap:18px; align-items:center;">
+    <a class="logout-link" href="{{ url_for('index') }}">На сайт</a>
+    <a class="logout-link" href="{{ url_for('master_logout') }}">Выйти</a>
+  </div>
+</div>
+
+<div class="master-body">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="tabs">
+    <div class="tab-btn active" data-tab="schedule">Расписание</div>
+    <div class="tab-btn" data-tab="bookings">Записи клиентов</div>
+    <div class="tab-btn" data-tab="photos">Фото на главной</div>
+  </div>
+
+  <!-- РАСПИСАНИЕ -->
+  <div class="tab-panel active" id="tab-schedule">
+    <div class="card">
+      <h3 class="section-title" style="text-align:left;">Добавить окна за период</h3>
+      <form method="POST" action="{{ url_for('add_slots_range') }}" class="inline-form">
+  <div class="form-group">
+    <label>С даты</label>
+    <input type="date" name="start_date" required>
+  </div>
+  <div class="form-group">
+    <label>По дату</label>
+    <input type="date" name="end_date" required>
+  </div>
+  <div class="form-group">
+    <label>Время с</label>
+    <input type="time" name="start_time" value="09:00" required>
+  </div>
+  <div class="form-group">
+    <label>Время до</label>
+    <input type="time" name="end_time" value="18:00" required>
+  </div>
+  <div class="form-group">
+    <label>Интервал (мин)</label>
+    <input type="number" name="interval" value="60" min="15" step="15" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Добавить окна</button>
+</form>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="text-align:left;">Добавить одно окно</h3>
+      <form method="POST" action="{{ url_for('add_slot') }}" class="inline-form">
+        <div class="form-group">
+          <label>Дата</label>
+          <input type="date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label>Время</label>
+          <input type="time" name="time" required>
+        </div>
+        <button type="submit" class="btn btn-outline">Добавить</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title" style="text-align:left;">Текущее расписание</h3>
+      {% if by_date %}
+        {% for date, slots in by_date.items() %}
+          <h4 style="color:var(--pink-primary); margin-top:18px;">{{ date }}</h4>
+          {% for s in slots %}
+            <div class="slot-row {% if s['is_booked'] %}booked{% endif %}">
+              <span class="slot-time">{{ s['time'] }} {% if s['is_booked'] %}— занято{% else %}— свободно{% endif %}</span>
+              <span class="slot-actions">
+                {% if s['is_booked'] %}
+                  <form method="POST" action="{{ url_for('free_slot', slot_id=s['id']) }}">
+                    <button class="btn-small btn-free" type="submit" onclick="return confirm('Освободить это окно? Запись клиента будет удалена.')">Освободить</button>
+                  </form>
+                {% else %}
+                  <form method="POST" action="{{ url_for('delete_slot', slot_id=s['id']) }}">
+                    <button class="btn-small btn-danger" type="submit" onclick="return confirm('Удалить это окно?')">Удалить</button>
+                  </form>
+                {% endif %}
+              </span>
+            </div>
+          {% endfor %}
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">Окон пока нет — добавьте их выше</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ЗАПИСИ -->
+  <div class="tab-panel" id="tab-bookings">
+    <div class="card">
+      <h3 class="section-title" style="text-align:left;">Записи клиентов</h3>
+      {% if bookings %}
+        {% for b in bookings %}
+          <div class="booking-item">
+            <strong>{{ b['date'] }} в {{ b['time'] }}</strong> — {{ b['client_name'] }}, {{ b['client_phone'] }}
+            {% if b['comment'] %}<br><span style="color:var(--text-light);">Комментарий: {{ b['comment'] }}</span>{% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">Записей пока нет</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ФОТО -->
+  <div class="tab-panel" id="tab-photos">
+    <div class="card">
+      <h3 class="section-title" style="text-align:left;">Добавить фото на главную страницу</h3>
+      <form method="POST" action="{{ url_for('upload_photo') }}" enctype="multipart/form-data" class="inline-form">
+        <div class="form-group">
+          <input type="file" name="photo" accept="image/*" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Загрузить</button>
+      </form>
+
+      <div class="photo-upload-grid">
+        {% for p in photos %}
+          <div class="photo-item">
+            <img src="{{ url_for('static', filename='uploads/' ~ p['filename']) }}" alt="Фото">
+            <form method="POST" action="{{ url_for('delete_photo', photo_id=p['id']) }}">
+              <button class="btn-small btn-danger" type="submit" onclick="return confirm('Удалить фото?')">✕</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+
+{% endblock %}

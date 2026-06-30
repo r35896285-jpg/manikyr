@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Маникюр — студия красоты{% endblock %}
+{% block body %}
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="topbar">
+      <div class="brand">
+        <img src="{{ url_for('static', filename='img/OIP (2).webp') }}" alt="Логотип Маникюр">
+        <span class="brand-name">Маникюр</span>
+      </div>
+      <a class="master-link" href="{{ url_for('master_login') }}">Кабинет мастера</a>
+    </div>
+
+    <div class="hero-main">
+      <h1>Красивые ручки — ваше право на роскошь</h1>
+      <p>Аккуратный маникюр, стильный дизайн и уютная атмосфера. Запишитесь онлайн на удобное время — это займёт меньше минуты.</p>
+      <a class="btn btn-primary" href="{{ url_for('booking') }}">Записаться онлайн →</a>
+    </div>
+
+    <div class="info-row">
+      <div class="info-card">
+        <span class="icon">📞</span>
+        <div>
+          <div class="label">Телефон</div>
+          <div class="value">{{ info.phone }}</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <span class="icon">🕒</span>
+        <div>
+          <div class="label">Часы работы</div>
+          <div class="value">{{ info.work_hours }}</div>
+        </div>
+      </div>
+      <div class="info-card">
+        <span class="icon">📍</span>
+        <div>
+          <div class="label">Адрес</div>
+          <div class="value">{{ info.address }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery-section">
+  <h2 class="section-title">Наши работы</h2>
+  <p class="section-subtitle">Немного вдохновения для вашего следующего маникюра</p>
+
+  {% if photos %}
+    <div class="gallery-grid">
+      {% for p in photos %}
+        <img src="{{ url_for('static', filename='uploads/' ~ p['filename']) }}" alt="Работа мастера">
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="gallery-empty">Фотографии работ скоро появятся здесь ✨</p>
+  {% endif %}
+</section>
+
+<footer class="footer">
+  © {{ 2026 }} Маникюр — студия красоты. Все права защищены.
+</footer>
+
+{% endblock %}

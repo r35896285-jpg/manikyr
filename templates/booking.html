@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Запись на маникюр{% endblock %}
+{% block body %}
+
+<div class="page-wrap">
+  <a class="back-link" href="{{ url_for('index') }}">← На главную</a>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <h2 class="section-title" style="text-align:left;margin-bottom:6px;">Выберите дату и время</h2>
+    <p class="section-subtitle" style="text-align:left;margin-bottom:24px;">Доступны только свободные окна записи</p>
+
+    {% if by_date %}
+      <form method="POST" id="booking-form">
+        <input type="hidden" name="slot_id" id="slot_id" required>
+
+        {% for date, slots in by_date.items() %}
+          <div class="date-block">
+            <h3>{{ date }}</h3>
+            <div class="time-grid">
+              {% for s in slots %}
+                <div class="time-slot" data-id="{{ s['id'] }}" data-date="{{ date }}" data-time="{{ s['time'] }}">
+                  {{ s['time'] }}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="selected-info" id="selected-info" style="display:none;"></div>
+
+        <div class="form-group">
+          <label>Ваше имя</label>
+          <input type="text" name="name" required placeholder="Например, Анна">
+        </div>
+        <div class="form-group">
+          <label>Телефон</label>
+          <input type="tel" name="phone" required placeholder="+7 (___) ___-__-__">
+        </div>
+        <div class="form-group">
+          <label>Комментарий (необязательно)</label>
+          <textarea name="comment" rows="3" placeholder="Пожелания к дизайну, форме ногтей и т.д."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Подтвердить запись</button>
+      </form>
+    {% else %}
+      <div class="empty-state">
+        Свободных окон пока нет 😔<br>
+        Пожалуйста, загляните позже или позвоните нам: {{ info.phone }}
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const slots = document.querySelectorAll('.time-slot');
+  const slotIdInput = document.getElementById('slot_id');
+  const submitBtn = document.getElementById('submit-btn');
+  const infoBox = document.getElementById('selected-info');
+
+  slots.forEach(slot => {
+    slot.addEventListener('click', () => {
+      slots.forEach(s => s.classList.remove('selected'));
+      slot.classList.add('selected');
+      slotIdInput.value = slot.dataset.id;
+      submitBtn.disabled = false;
+      infoBox.style.display = 'block';
+      infoBox.innerText = 'Вы выбрали: ' + slot.dataset.date + ' в ' + slot.dataset.time;
+    });
+  });
+</script>
+
+{% endblock %}
